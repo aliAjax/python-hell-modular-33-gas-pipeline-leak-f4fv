@@ -6,6 +6,11 @@ class DomainError(Exception):
         super().__init__(message)
         self.code = code
         self.status = status
+        self.detail = None
+
+    def with_detail(self, detail):
+        self.detail = detail
+        return self
 
 
 class ConflictError(DomainError):

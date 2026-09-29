@@ -1,5 +1,15 @@
-<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>燃气管线泄漏响应</title><body><h1>燃气管线泄漏检测与隔离协调</h1><p>使用 JSON API 创建泄漏事件、登记巡检或传感记录，并完成核验、隔离、抢修、试压与恢复。</p><pre>GET /health
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>燃气管线泄漏响应</title><body><h1>燃气管线泄漏检测与隔离协调</h1><p>使用 JSON API 创建泄漏事件、登记巡检或传感记录，并完成核验、隔离、抢修、试压与恢复。隔离任务与阀门指令绑定：同一管段未结束前只保留一套有效顺序，重复提交会看到占用与差异；指令有唯一代号，回执按修订号判重，更新指令后旧回执失效；网络恢复后对账未完成指令，无法确认的转人工处理。</p><pre>GET /health
 GET /api/state
 POST /api/items
 POST /api/items/{id}/sources
-POST /api/items/{id}/actions</pre></body></html>
+POST /api/items/{id}/actions
+POST /api/items/{id}/plans
+GET /api/plans/{id}
+POST /api/plans/{id}/commands
+POST /api/plans/{id}/complete
+POST /api/plans/{id}/abort
+POST /api/commands/{id}/update
+POST /api/commands/{id}/receipts
+POST /api/commands/{id}/resolve
+GET /api/commands/manual-review
+POST /api/reconcile</pre></body></html>
