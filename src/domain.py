@@ -87,3 +87,25 @@ def normalize_source(payload):
         "note": payload.get("note", ""),
     }
     return result
+
+
+def normalize_receipt(payload):
+    command_code = require_text(payload, "command_code")
+    result = require_text(payload, "result")
+    receipted_at = parse_timestamp(payload, "receipted_at")
+    command_version = payload.get("command_version")
+    if command_version is not None:
+        if isinstance(command_version, bool) or int(command_version) < 1:
+            raise DomainError("invalid_command_version", "指令版本必须是正整数")
+        command_version = int(command_version)
+    receipt_code = payload.get("receipt_code")
+    if receipt_code is not None:
+        receipt_code = require_text(payload, "receipt_code")
+    return {
+        "command_code": command_code,
+        "command_version": command_version,
+        "result": result,
+        "receipted_at": receipted_at,
+        "receipt_code": receipt_code,
+        "note": payload.get("note", ""),
+    }

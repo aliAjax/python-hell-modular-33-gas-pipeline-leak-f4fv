@@ -2,8 +2,13 @@ from .domain import DomainError
 
 ENTITY_TYPE = "pipeline_leak"
 INITIAL_STATUS = "reported"
+TERMINAL_STATUSES = {"restored", "cancelled"}
 CREATE_ROLES = {"dispatcher", "responder"}
 SOURCE_ROLES = {"dispatcher", "responder", "patrol", "sensor"}
+RECEIPT_ROLES = {"dispatcher", "responder", "supervisor"}
+RECONCILE_ROLES = {"dispatcher", "supervisor"}
+MANUAL_REVIEW_ROLES = {"supervisor"}
+SUCCESS_RESULTS = {"closed", "acknowledged", "ok", "success", "confirmed", "in_position"}
 ACTION_ROLES = {
     "verify": {"dispatcher", "responder"},
     "isolate": {"supervisor", "responder"},
@@ -61,7 +66,7 @@ def apply_action(item, action, payload, actor, role):
         return "verified", current, {"assessment": current["assessment"], "verification": current["verification"]}
 
     if action == "isolate":
-        _need_status(item, {"verified"})
+        _need_status(item, {"verified", "isolated"})
         sequence = payload.get("valve_sequence")
         if not isinstance(sequence, list) or len(sequence) < 2:
             raise DomainError("valve_sequence_required", "至少需要提交两个阀门及顺序")
@@ -106,3 +111,23 @@ def apply_action(item, action, payload, actor, role):
         return "cancelled", current, {"reason": reason}
 
     raise DomainError("unknown_action", "不支持的操作")
+
+
+def sequence_diff(existing, submitted):
+    """比较两套阀门顺序，返回占用方与提交方的差异。"""
+    existing = [value.strip() for value in existing]
+    submitted = [value.strip() for value in submitted]
+    existing_set = set(existing)
+    submitted_set = set(submitted)
+    replaced = []
+    for index in range(max(len(existing), len(submitted))):
+        old = existing[index] if index < len(existing) else None
+        new = submitted[index] if index < len(submitted) else None
+        if old != new:
+            replaced.append({"position": index, "from": old, "to": new})
+    return {
+        "same": [value for value in existing if value in submitted_set],
+        "added": [value for value in submitted if value not in existing_set],
+        "removed": [value for value in existing if value not in submitted_set],
+        "replaced": replaced,
+    }
